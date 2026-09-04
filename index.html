@@ -21,7 +21,7 @@
       <span class="cnt" id="home-cnt"></span>
     </div>
   </div>
-  <div class="home-footer">Austral Perú &middot; Data Maestra SAP S/4HANA<br><span class="app-version">v1.2 – 31/07/2026</span></div>
+  <div class="home-footer">Austral Perú &middot; Data Maestra SAP S/4HANA<br><span class="app-version">v1.5 – 04/09/2026</span><br><span class="data-as-of" id="home-data-as-of"></span></div>
 </div>
 <div id="app">
   <header>
@@ -33,6 +33,7 @@
   </header>
   <div class="tabs">
     <div class="tab active" onclick="switchTab('mat')">🗂 Materiales</div>
+    <div class="tab" onclick="switchTab('gcc')">👤 Compradores</div>
     <div class="tab" onclick="switchTab('tipos')">🏷 Tipos</div>
     <div class="tab" onclick="switchTab('grupos')">📂 Grupos artículos</div>
     <div class="tab" onclick="switchTab('cats')">💰 Cat. valoración</div>
@@ -119,15 +120,30 @@
       <span style="margin-left:auto;font-size:11px;color:#888">50 por página</span>
     </div>
   </div>
+  <div class="view" id="view-gcc">
+    <div class="cat-filters">
+      <input id="f-gcc-q" placeholder="Buscar comprador..." oninput="renderCompradores()">
+      <select id="f-gcc-tipo" onchange="renderCompradores()"><option value="">Todos los tipos</option></select>
+      <span class="cnt" id="cnt-gcc"></span>
+    </div>
+    <div class="gcc-split">
+      <aside class="gcc-list-wrap" id="gcc-list"></aside>
+      <section class="gcc-detail" id="gcc-detail">
+        <div class="gcc-detail-ph">← Selecciona un comprador para ver sus tipos y familias</div>
+      </section>
+    </div>
+  </div>
   <div class="view" id="view-tipos">
     <div class="cat-filters">
       <input id="f-tipos-q" placeholder="Buscar tipo..." oninput="renderTipos()">
       <span class="cnt" id="cnt-tipos"></span>
     </div>
-    <div class="cat-wrap"><table class="cat-table">
-      <thead><tr><th>Código Tipo</th><th>Descripción</th><th>Nº Materiales</th></tr></thead>
-      <tbody id="tb-tipos"></tbody>
-    </table></div>
+    <div class="gcc-split">
+      <aside class="gcc-list-wrap" id="tipo-list"></aside>
+      <section class="gcc-detail" id="tipo-detail">
+        <div class="gcc-detail-ph">← Selecciona un tipo para ver sus familias</div>
+      </section>
+    </div>
   </div>
   <div class="view" id="view-grupos">
     <div class="cat-filters">
@@ -136,6 +152,7 @@
       <select id="f-grp-gcc" onchange="renderGrupos()"><option value="">Todos los compradores</option></select>
       <span class="cnt" id="cnt-grupos"></span>
     </div>
+    <div class="cat-hint">Clic en una familia para ver sus materiales</div>
     <div class="cat-wrap"><table class="cat-table">
       <thead><tr><th>Tipo</th><th>Desc. Tipo</th><th>Grupo Artículos</th><th>Desc. Grupo</th><th>Comprador</th><th>Nº Materiales</th></tr></thead>
       <tbody id="tb-grupos"></tbody>
@@ -147,6 +164,7 @@
       <select id="f-cat-tipo" onchange="renderCats()"><option value="">Todos los tipos</option></select>
       <span class="cnt" id="cnt-cats"></span>
     </div>
+    <div class="cat-hint">Clic en una categoría para ver sus materiales</div>
     <div class="cat-wrap"><table class="cat-table">
       <thead><tr><th>Tipo</th><th>Desc. Tipo</th><th>Cat. Valoración</th><th>Descripción</th><th>Nº Materiales</th></tr></thead>
       <tbody id="tb-cats"></tbody>
@@ -166,6 +184,7 @@
       <tbody id="tb-tb"></tbody>
     </table></div>
   </div>
+  <div class="app-footer" id="app-data-as-of"></div>
 </div>
 <script src="app.js"></script>
 </body>

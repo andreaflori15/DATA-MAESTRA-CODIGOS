@@ -20,6 +20,18 @@ var GRUPOS = RAW_GRUPOS.map(function(g){
 });
 
 document.getElementById('home-cnt').textContent=MAT.length.toLocaleString()+' materiales · '+TIPOS.length+' tipos';
+(function fillDataAsOf(){
+  var txt='';
+  if(typeof DATA_AS_OF==='string'&&DATA_AS_OF){
+    var p=DATA_AS_OF.split('-');
+    var nice=p.length===3?(p[2]+'/'+p[1]+'/'+p[0]):DATA_AS_OF;
+    txt='Datos a '+nice;
+  }
+  var home=document.getElementById('home-data-as-of');
+  var app=document.getElementById('app-data-as-of');
+  if(home) home.textContent=txt;
+  if(app) app.textContent=txt;
+})();
 
 var matByTipo={}, matByCat={};
 MAT.forEach(function(m){
@@ -27,7 +39,8 @@ MAT.forEach(function(m){
   matByCat[m.cv]=(matByCat[m.cv]||0)+1;
 });
 
-var filtered=MAT.slice(), sortCol=-1, sortDir=1, page=0, selMc=null;
+var filtered=MAT.slice(), sortCol=-1, sortDir=1, page=0, selMc=null, selGcc=null, selTipo=null;
+var gccOpenTipos={};
 var activeTab='mat', PAGE=50;
 var SD={tipo:'',grupo:'',gcc:'',cv:'',txc:''};
 
@@ -44,14 +57,56 @@ function goHome(){
 }
 function switchTab(name){
   activeTab=name;
-  var names=['mat','tipos','grupos','cats','tb'];
+  var names=['mat','gcc','tipos','grupos','cats','tb'];
   document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
   document.getElementById('view-'+name).classList.add('active');
-  if(name==='tipos') renderTipos();
+  if(name==='gcc') renderCompradores();
+  else if(name==='tipos') renderTipos();
   else if(name==='grupos') renderGrupos();
   else if(name==='cats') renderCats();
   else if(name==='tb') renderTb();
+}
+function goToMateriales(opts){
+  opts=opts||{};
+  document.getElementById('s-desc').value='';
+  SD.tipo=opts.tipo||'';
+  SD.grupo=opts.grupo||'';
+  SD.gcc=opts.gcc||'';
+  SD.cv=opts.cv||'';
+  SD.txc='';
+  document.querySelectorAll('#txc-filter .chip').forEach(function(c){
+    c.classList.toggle('active',(c.getAttribute('data-txc')||'')==='');
+  });
+  ['tipo','grupo','gcc','cv'].forEach(function(n){
+    var el=document.getElementById('sd-'+n+'-search');
+    if(el) el.value='';
+    filterSD(n);
+  });
+  function tipoLabel(code){
+    var t=TIPOS.filter(function(x){return x.code===code;})[0];
+    return t?t.code+' \u2013 '+t.desc:code;
+  }
+  function grupoLabel(code){
+    var m=MAT.filter(function(x){return x.gc===code;})[0];
+    return m?m.gc+' \u2013 '+m.gd:code;
+  }
+  function gccLabel(code){
+    var m=MAT.filter(function(x){return x.gcc_raw===code;})[0];
+    return m?m.gcc:code;
+  }
+  function cvLabel(code){
+    return code+(CV_DESC[code]?' \u2013 '+CV_DESC[code]:'');
+  }
+  document.getElementById('sd-tipo-input').value=SD.tipo?tipoLabel(SD.tipo):'';
+  document.getElementById('sd-gcc-input').value=SD.gcc?gccLabel(SD.gcc):'';
+  document.getElementById('sd-cv-input').value=SD.cv?cvLabel(SD.cv):'';
+  updateGrupoDD();
+  document.getElementById('sd-grupo-input').value=SD.grupo?grupoLabel(SD.grupo):'';
+  selMc=null;
+  document.getElementById('detail-panel').innerHTML='<div class="detail-ph">\u2190 Selecciona un material para ver el detalle</div>';
+  switchTab('mat');
+  applyFilters();
 }
 function buildMainDropdowns(){
   var tl=document.getElementById('sd-tipo-list');
@@ -238,27 +293,104 @@ function selectMat(mc){
   renderTable();
 }
 function buildCatDropdowns(){
+  var tipoOpts=['f-grp-tipo','f-cat-tipo','f-tb-tipo','f-gcc-tipo'];
+  tipoOpts.forEach(function(id){
+    document.getElementById(id).innerHTML='<option value="">Todos los tipos</option>';
+  });
   TIPOS.forEach(function(t){
     var o=new Option(t.code+' \u2013 '+t.desc,t.code);
-    document.getElementById('f-grp-tipo').add(o.cloneNode(true));
-    document.getElementById('f-cat-tipo').add(o.cloneNode(true));
-    document.getElementById('f-tb-tipo').add(o.cloneNode(true));
+    tipoOpts.forEach(function(id){document.getElementById(id).add(o.cloneNode(true));});
   });
+  var gccSel=document.getElementById('f-grp-gcc');
+  gccSel.innerHTML='<option value="">Todos los compradores</option>';
   var seen2={};
-  GRUPOS.forEach(function(g){if(g.gcc&&!seen2[g.gcc]){seen2[g.gcc]=true;document.getElementById('f-grp-gcc').add(new Option(g.gcc,g.gcc));}});
+  GRUPOS.forEach(function(g){if(g.gcc&&!seen2[g.gcc]){seen2[g.gcc]=true;gccSel.add(new Option(g.gcc,g.gcc));}});
+  var catSel=document.getElementById('f-tb-cat');
+  catSel.innerHTML='<option value="">Todas las cat.</option>';
   var cs=[];
   TB.forEach(function(r){if(r.cv&&!cs.includes(r.cv)) cs.push(r.cv);});
-  cs.sort().forEach(function(c){document.getElementById('f-tb-cat').add(new Option(c,c));});
+  cs.sort().forEach(function(c){catSel.add(new Option(c,c));});
+}
+function listTipos(){
+  var q=document.getElementById('f-tipos-q').value.toLowerCase();
+  return TIPOS.filter(function(t){
+    return !q||t.code.toLowerCase().includes(q)||t.desc.toLowerCase().includes(q);
+  }).map(function(t){
+    var fam={}, buyers={};
+    MAT.forEach(function(m){
+      if(m.tc!==t.code) return;
+      if(m.gc) fam[m.gc]=1;
+      if(m.gcc_raw) buyers[m.gcc_raw]=1;
+    });
+    return {code:t.code, desc:t.desc, n:matByTipo[t.code]||0, nFam:Object.keys(fam).length, nBuyers:Object.keys(buyers).length};
+  });
+}
+function tipoTree(tc){
+  var map={};
+  MAT.forEach(function(m){
+    if(m.tc!==tc) return;
+    var k=(m.gc||'')+'|'+(m.gcc_raw||'');
+    if(!map[k]) map[k]={gc:m.gc||'', gd:m.gd||'', gcc:m.gcc_raw||'', buyer:buyerName(m.gcc, m.gcc_raw), n:0};
+    map[k].n++;
+  });
+  return Object.keys(map).sort().map(function(k){return map[k];});
+}
+function selectTipo(code){
+  selTipo=code;
+  renderTipos();
+}
+function renderTipoDetail(){
+  var box=document.getElementById('tipo-detail');
+  if(!selTipo){
+    box.innerHTML='<div class="gcc-detail-ph">\u2190 Selecciona un tipo para ver sus familias</div>';
+    return;
+  }
+  var t=TIPOS.filter(function(x){return x.code===selTipo;})[0];
+  var rows=tipoTree(selTipo);
+  var fams={}, buyers={};
+  rows.forEach(function(r){ if(r.gc) fams[r.gc]=1; if(r.gcc) buyers[r.gcc]=1; });
+  var n=matByTipo[selTipo]||0;
+  var html='<div class="gcc-hd">'
+    +'<span class="badge" style="background:#dbeafe;color:#1e40af">'+selTipo+'</span>'
+    +'<div><div class="gcc-hd-name">'+(t?t.desc:selTipo)+'</div>'
+    +'<div class="gcc-hd-stats"><b>'+n.toLocaleString()+'</b> c\u00f3digos \u00b7 <b>'+Object.keys(fams).length+'</b> familias \u00b7 <b>'+Object.keys(buyers).length+'</b> compradores</div></div>'
+    +'<button type="button" class="btn-export" style="margin-left:auto" onclick="goToMateriales({tipo:\''+selTipo+'\'})">Ver c\u00f3digos</button>'
+    +'</div>';
+  if(!rows.length){
+    html+='<div class="gcc-detail-ph">Sin materiales en este tipo</div>';
+    box.innerHTML=html;
+    return;
+  }
+  html+='<div class="tipo-cols"><span>Familia</span><span class="gcc-fam-buyer">Comprador</span><span>C\u00f3digos</span></div>';
+  rows.forEach(function(r){
+    var click=r.gc
+      ?'goToMateriales({tipo:\''+selTipo+'\',grupo:\''+r.gc+'\'})'
+      :'goToMateriales({tipo:\''+selTipo+'\'})';
+    html+='<div class="gcc-fam" onclick="'+click+'" style="background:#fff;margin:0 12px;border:1px solid #eaedf3;border-top:none;padding-left:12px">'
+      +'<span class="badge" style="background:#fef3c7;color:#92400e">'+(r.gc||'\u2014')+'</span>'
+      +'<span class="gcc-fam-desc">'+(r.gd||'Sin familia')+'</span>'
+      +'<span class="gcc-fam-buyer"><span class="badge" style="background:#f3e8ff;color:#6b21a8">'+(r.gcc||'\u2014')+'</span> '
+      +'<span style="color:#555;font-size:11px">'+r.buyer+'</span></span>'
+      +'<span class="gcc-fam-n">'+r.n.toLocaleString()+'</span>'
+      +'</div>';
+  });
+  box.innerHTML=html;
 }
 function renderTipos(){
-  var q=document.getElementById('f-tipos-q').value.toLowerCase();
-  var rows=TIPOS.filter(function(t){return !q||t.code.toLowerCase().includes(q)||t.desc.toLowerCase().includes(q);});
+  var rows=listTipos();
   document.getElementById('cnt-tipos').textContent=rows.length+' tipos';
-  document.getElementById('tb-tipos').innerHTML=rows.map(function(t){
-    return '<tr><td><span class="badge" style="background:#dbeafe;color:#1e40af">'+t.code+'</span></td>'
-      +'<td style="color:#555">'+t.desc+'</td>'
-      +'<td style="text-align:center"><b>'+(matByTipo[t.code]||0).toLocaleString()+'</b></td></tr>';
+  if(!selTipo&&rows.length) selTipo=rows[0].code;
+  var still=false;
+  rows.forEach(function(r){ if(r.code===selTipo) still=true; });
+  if(!still) selTipo=rows.length?rows[0].code:null;
+  document.getElementById('tipo-list').innerHTML=rows.map(function(t){
+    return '<div class="gcc-item'+(selTipo===t.code?' sel':'')+'" onclick="selectTipo(\''+t.code+'\')">'
+      +'<span class="badge" style="background:#dbeafe;color:#1e40af">'+t.code+'</span>'
+      +'<div class="gcc-item-meta"><div class="gcc-item-name">'+t.desc+'</div>'
+      +'<div class="gcc-item-sub">'+t.nFam+' familias \u00b7 '+t.nBuyers+' compradores</div></div>'
+      +'<div class="gcc-item-n">'+t.n.toLocaleString()+'</div></div>';
   }).join('');
+  renderTipoDetail();
 }
 function renderGrupos(){
   var q=document.getElementById('f-grp-q').value.toLowerCase();
@@ -274,7 +406,8 @@ function renderGrupos(){
   MAT.forEach(function(m){ matByGrupo[m.gc] = (matByGrupo[m.gc]||0)+1; });
   document.getElementById('cnt-grupos').textContent=rows.length+' grupos';
   document.getElementById('tb-grupos').innerHTML=rows.map(function(g){
-    return '<tr><td><span class="badge" style="background:#dbeafe;color:#1e40af">'+g.tc+'</span></td>'
+    return '<tr class="clickable" title="Ver materiales" onclick="goToMateriales({tipo:\''+g.tc+'\',grupo:\''+g.gc+'\'})">'
+      +'<td><span class="badge" style="background:#dbeafe;color:#1e40af">'+g.tc+'</span></td>'
       +'<td style="color:#555">'+g.td+'</td>'
       +'<td><span class="badge" style="background:#fef3c7;color:#92400e">'+g.gc+'</span></td>'
       +'<td>'+g.gd+'</td>'
@@ -292,12 +425,137 @@ function renderCats(){
   });
   document.getElementById('cnt-cats').textContent=rows.length+' categor\u00edas';
   document.getElementById('tb-cats').innerHTML=rows.map(function(c){
-    return '<tr><td><span class="badge" style="background:#dbeafe;color:#1e40af">'+c.tc+'</span></td>'
+    return '<tr class="clickable" title="Ver materiales" onclick="goToMateriales({tipo:\''+c.tc+'\',cv:\''+c.cv+'\'})">'
+      +'<td><span class="badge" style="background:#dbeafe;color:#1e40af">'+c.tc+'</span></td>'
       +'<td style="color:#555">'+c.td+'</td>'
       +'<td><span class="badge" style="background:#d1fae5;color:#065f46;font-family:monospace">'+c.cv+'</span></td>'
       +'<td style="color:#555">'+(c.cd||CV_DESC[c.cv]||'')+'</td>'
       +'<td style="text-align:center">'+(matByCat[c.cv]||0).toLocaleString()+' mat.</td></tr>';
   }).join('');
+}
+function buyerName(label, gcc){
+  var n=(label||'').replace(/^.*\u2013\s*/,'');
+  return n||gcc||'Sin comprador';
+}
+function listCompradores(){
+  var q=document.getElementById('f-gcc-q').value.toLowerCase();
+  var tc=document.getElementById('f-gcc-tipo').value;
+  var map={};
+  MAT.forEach(function(m){
+    if(tc&&m.tc!==tc) return;
+    var k=m.gcc_raw||'';
+    if(!map[k]) map[k]={gcc:k, label:m.gcc||'', name:buyerName(m.gcc,k), fam:{}, tipos:{}, n:0};
+    map[k].n++;
+    if(m.gc) map[k].fam[m.gc]=1;
+    if(m.tc) map[k].tipos[m.tc]=1;
+  });
+  return Object.keys(map).sort().map(function(k){
+    var o=map[k];
+    return {gcc:o.gcc, label:o.label, name:o.name, nFam:Object.keys(o.fam).length, nTipos:Object.keys(o.tipos).length, n:o.n};
+  }).filter(function(r){
+    return !q||(r.gcc+' '+r.label+' '+r.name).toLowerCase().includes(q);
+  });
+}
+function compradorTree(gcc, tc){
+  var tipos={};
+  MAT.forEach(function(m){
+    if((m.gcc_raw||'')!==(gcc||'')) return;
+    if(tc&&m.tc!==tc) return;
+    if(!m.tc) return;
+    if(!tipos[m.tc]) tipos[m.tc]={tc:m.tc, td:m.td||'', n:0, fam:{}};
+    tipos[m.tc].n++;
+    var fk=m.gc||'';
+    if(!tipos[m.tc].fam[fk]) tipos[m.tc].fam[fk]={gc:fk, gd:m.gd||'', n:0};
+    tipos[m.tc].fam[fk].n++;
+  });
+  return Object.keys(tipos).sort().map(function(k){
+    var t=tipos[k];
+    t.familias=Object.keys(t.fam).sort().map(function(fk){return t.fam[fk];});
+    return t;
+  });
+}
+function selectComprador(gcc){
+  selGcc=gcc;
+  gccOpenTipos={};
+  renderCompradores();
+}
+function toggleGccTipo(tc, ev){
+  if(ev) ev.stopPropagation();
+  gccOpenTipos[tc]=gccOpenTipos[tc]===false;
+  renderGccDetail();
+}
+function renderGccDetail(){
+  var box=document.getElementById('gcc-detail');
+  if(selGcc===null){
+    box.innerHTML='<div class="gcc-detail-ph">\u2190 Selecciona un comprador para ver sus tipos y familias</div>';
+    return;
+  }
+  var tc=document.getElementById('f-gcc-tipo').value;
+  var rows=listCompradores();
+  var info=null;
+  rows.forEach(function(r){ if(r.gcc===selGcc) info=r; });
+  if(!info){
+    var all=MAT.filter(function(m){return (m.gcc_raw||'')===selGcc;})[0];
+    info={gcc:selGcc, name:buyerName(all?all.gcc:'', selGcc), nFam:0, nTipos:0, n:0};
+  }
+  var tree=compradorTree(selGcc, tc);
+  if(Object.keys(gccOpenTipos).length===0){
+    tree.forEach(function(t){ gccOpenTipos[t.tc]=true; });
+  }
+  var gccArg=selGcc?('\''+selGcc+'\''):'\'\'';
+  var tipoArg=tc?(',tipo:\''+tc+'\''):'';
+  var html='<div class="gcc-hd">'
+    +'<span class="badge" style="background:#f3e8ff;color:#6b21a8">'+(info.gcc||'\u2014')+'</span>'
+    +'<div><div class="gcc-hd-name">'+info.name+'</div>'
+    +'<div class="gcc-hd-stats"><b>'+info.n.toLocaleString()+'</b> c\u00f3digos \u00b7 <b>'+info.nFam+'</b> familias \u00b7 <b>'+tree.length+'</b> tipos</div></div>'
+    +'<button type="button" class="btn-export" style="margin-left:auto" onclick="goToMateriales({gcc:'+gccArg+tipoArg+'})">Ver c\u00f3digos</button>'
+    +'</div>';
+  if(!tree.length){
+    html+='<div class="gcc-detail-ph">Sin materiales con el filtro actual</div>';
+    box.innerHTML=html;
+    return;
+  }
+  tree.forEach(function(t){
+    var open=gccOpenTipos[t.tc]!==false;
+    html+='<div class="gcc-tipo">'
+      +'<div class="gcc-tipo-row" onclick="goToMateriales({gcc:'+gccArg+',tipo:\''+t.tc+'\'})">'
+      +'<span class="gcc-chev" onclick="toggleGccTipo(\''+t.tc+'\',event)">'+(open?'\u25bc':'\u25b6')+'</span>'
+      +'<span class="badge" style="background:#dbeafe;color:#1e40af">'+t.tc+'</span>'
+      +'<span class="gcc-tipo-desc">'+t.td+'</span>'
+      +'<span class="gcc-tipo-n">'+t.n.toLocaleString()+'</span>'
+      +'</div>';
+    if(open){
+      t.familias.forEach(function(f){
+        var famClick=f.gc
+          ?'goToMateriales({gcc:'+gccArg+',tipo:\''+t.tc+'\',grupo:\''+f.gc+'\'})'
+          :'goToMateriales({gcc:'+gccArg+',tipo:\''+t.tc+'\'})';
+        html+='<div class="gcc-fam" onclick="'+famClick+'">'
+          +'<span class="badge" style="background:#fef3c7;color:#92400e">'+(f.gc||'\u2014')+'</span>'
+          +'<span class="gcc-fam-desc">'+(f.gd||'Sin familia')+'</span>'
+          +'<span class="gcc-fam-n">'+f.n.toLocaleString()+'</span>'
+          +'</div>';
+      });
+    }
+    html+='</div>';
+  });
+  box.innerHTML=html;
+}
+function renderCompradores(){
+  var rows=listCompradores();
+  document.getElementById('cnt-gcc').textContent=rows.length+' compradores';
+  if(selGcc===null&&rows.length) selGcc=rows[0].gcc;
+  var still=false;
+  rows.forEach(function(r){ if(r.gcc===selGcc) still=true; });
+  if(!still) selGcc=rows.length?rows[0].gcc:null;
+  document.getElementById('gcc-list').innerHTML=rows.map(function(r){
+    var key=r.gcc||'';
+    return '<div class="gcc-item'+(selGcc===r.gcc?' sel':'')+'" onclick="selectComprador(\''+key+'\')">'
+      +'<span class="badge" style="background:#f3e8ff;color:#6b21a8">'+(r.gcc||'\u2014')+'</span>'
+      +'<div class="gcc-item-meta"><div class="gcc-item-name">'+r.name+'</div>'
+      +'<div class="gcc-item-sub">'+r.nFam+' familias \u00b7 '+r.nTipos+' tipos</div></div>'
+      +'<div class="gcc-item-n">'+r.n.toLocaleString()+'</div></div>';
+  }).join('');
+  renderGccDetail();
 }
 function onTbTipoChange(){
   var tc=document.getElementById('f-tb-tipo').value;
@@ -336,11 +594,36 @@ function exportCurrent(){
     rows=filtered.map(function(m){return[m.mc,m.md,m.tc,m.td,m.gc,m.gd,m.gcc,m.cv,m.cd||''];});
     filename='Servicios_Materiales';
   } else if(activeTab==='tipos'){
-    headers=['C\u00f3digo Tipo','Descripci\u00f3n','N\u00ba Materiales'];
-    var q2=document.getElementById('f-tipos-q').value.toLowerCase();
-    rows=TIPOS.filter(function(t){return!q2||t.code.toLowerCase().includes(q2)||t.desc.toLowerCase().includes(q2);})
-              .map(function(t){return[t.code,t.desc,matByTipo[t.code]||0];});
-    filename='Servicios_Tipos';
+    if(selTipo){
+      var tEx=TIPOS.filter(function(x){return x.code===selTipo;})[0];
+      headers=['Tipo','Desc. Tipo','Familia','Desc. Familia','Grupo Compras','Comprador','N\u00ba C\u00f3digos'];
+      rows=tipoTree(selTipo).map(function(r){
+        return[selTipo, tEx?tEx.desc:'', r.gc, r.gd, r.gcc, r.buyer, r.n];
+      });
+      filename='Servicios_Tipo_'+selTipo;
+    } else {
+      headers=['C\u00f3digo Tipo','Descripci\u00f3n','N\u00ba Materiales'];
+      rows=listTipos().map(function(t){return[t.code,t.desc,t.n];});
+      filename='Servicios_Tipos';
+    }
+  } else if(activeTab==='gcc'){
+    var tcGcc=document.getElementById('f-gcc-tipo').value;
+    if(selGcc!==null){
+      var infoEx=listCompradores().filter(function(r){return r.gcc===selGcc;})[0];
+      var nm=infoEx?infoEx.name:selGcc;
+      headers=['Comprador','Grupo Compras','Tipo','Desc. Tipo','Familia','Desc. Familia','N\u00ba C\u00f3digos'];
+      rows=[];
+      compradorTree(selGcc, tcGcc).forEach(function(t){
+        t.familias.forEach(function(f){
+          rows.push([nm, selGcc, t.tc, t.td, f.gc, f.gd, f.n]);
+        });
+      });
+      filename='Servicios_Comprador_'+(selGcc||'SIN');
+    } else {
+      headers=['Grupo Compras','Comprador','N\u00ba Familias','N\u00ba Tipos','N\u00ba C\u00f3digos'];
+      rows=listCompradores().map(function(r){return[r.gcc,r.name,r.nFam,r.nTipos,r.n];});
+      filename='Servicios_Compradores';
+    }
   } else if(activeTab==='grupos'){
     headers=['Tipo','Desc. Tipo','Grupo Art\u00edculos','Desc. Grupo','Comprador'];
     var q3=document.getElementById('f-grp-q').value.toLowerCase();

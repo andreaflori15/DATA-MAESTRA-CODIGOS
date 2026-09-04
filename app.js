@@ -1,78 +1,11 @@
-var CV_DESC = {
-  "Z101":"Transp.Insumo,Parte,Rep.","Z102":"Tto.Deshecho y Resi.Indus",
-  "Z103":"Transporte de PPTT","Z104":"Serv. Transp. en Producc.",
-  "Z105":"Transporte Personal","Z106":"Courier (Correspondencia)",
-  "Z107":"Alojamiento de Personal","Z108":"Gastos de Viaje Nacional",
-  "Z109":"Gastos de Viaje Exterior","Z110":"Honorarios Auditores",
-  "Z111":"Honorario de Abogados","Z112":"Honorario Asesoría Tribut",
-  "Z113":"Honorarios p. Traducción","Z114":"Honorar.Asesorías Varias",
-  "Z115":"Hono.Agenciamiento Aduana","Z116":"Comisiones Ventas",
-  "Z117":"Produc. Encargada a Terce","Z118":"Desem/Embal Prd Congelado",
-  "Z119":"Mtto. y Reparación Edifi.","Z120":"Mtto.y Reparación Vehic.",
-  "Z121":"Mtto. y Reparación Flota","Z122":"Mtto. y Reparac. Equipos",
-  "Z123":"Mtto. Mano Obra Redes","Z124":"Mtto. Otros Serv. Redes",
-  "Z125":"Alquiler de viviendas","Z126":"Alquiler Edificios",
-  "Z127":"Alquiler Estacionamiento","Z128":"Alq.Equipos de Operación",
-  "Z129":"Alquiler de Vehículos","Z130":"Alq.Grúas Transp.Mater.",
-  "Z131":"Alq.Equi. Oficina Otros","Z132":"Alq.Equi Oficina Computad",
-  "Z133":"Alq.Equi Oficina Fotoimpr","Z134":"Alquiler Otros",
-  "Z135":"Alquiler de Muelles","Z136":"Suministro Electricidad",
-  "Z137":"Suministro de Gas","Z138":"Suministro de Agua",
-  "Z139":"Telefonía Fija","Z140":"Telefonía Móvil",
-  "Z142":"Telefonía Satelital","Z143":"Comunic. (Data/Internet)",
-  "Z144":"Gastos por Servicio Cable","Z145":"Publicidad-Publicaciones",
-  "Z146":"Gastos Public. x Internet","Z147":"Gastos Diversos Marketing",
-  "Z148":"Gastos de Representación","Z149":"Serv. Vigilancia y Segur.",
-  "Z150":"Análisis Químicos","Z151":"Certificaciones",
-  "Z152":"Gasto p. Supervis.Embarqu","Z153":"Gastos de Embarque",
-  "Z154":"Gasto y Derechos Embarque","Z155":"Serv. Almacen. Mercader.",
-  "Z156":"Serv. Estiba","Z159":"Servicio de Limpieza",
-  "Z160":"Serv. Empaque","Z161":"Serv. Personal p.Etiqueta",
-  "Z162":"Serv. de Personal Otros","Z163":"Servicio de Encuadernado",
-  "Z164":"Fumigación","Z165":"Serv. Congel. y Almacenam",
-  "Z166":"Servicio por MP varios","Z167":"Servicios Varios",
-  "Z174":"Regalías","Z175":"Suscripción y Cotización",
-  "Z176":"Licen. y Derecho Vigilanc","Z178":"Flete en la Exportación",
-  "Z179":"Viv.y.Colaciones Empleado","Z180":"Viv.y.Cola. Obre.Permanen",
-  "Z181":"Viv.y.Cola. Obre.Jornaler","Z182":"Viv.y.Cola. Obre Destajer",
-  "Z183":"Viv.y.Cola. Tripulantes","Z184":"Gastos p.Bienestar Social",
-  "Z185":"Capacitación","Z186":"Otr Gasto Varios personal",
-  "Z187":"Gtos Culturales y Recreac","Z188":"Gastos de Habitabilidad",
-  "Z189":"Gastos Movilidad / Peajes","Z190":"Gastos Legales",
-  "Z191":"Gastos por Contratos","Z192":"Gtos. p.Responsab. Social",
-  "Z193":"Seg. y Salud Ocupacional","Z194":"Prog en Benef.de Personal",
-  "Z195":"Gtos Otros S-Casa Huesped","Z196":"Exámenes Médicos",
-  "Z197":"Plza.Vda.Ley Empleados","Z198":"Plza.Vda.Ley Obre.Eve.Des",
-  "Z199":"Plza.Vda.Ley Obre.Eve.Jor","Z200":"Plza.Vda.Ley Obre.Permane",
-  "Z201":"EPS Funcionarios","Z202":"EPS Empleados",
-  "Z203":"EPS Obr Eventual Destajer","Z204":"EPS Obr Eventual Jornaler",
-  "Z205":"EPS Obreros Permanente","Z206":"Servicio Tratamiento MP",
-  "Z207":"Plan Familiar de Salud","Z208":"Port. y Comisi.Bancarias",
-  "Z209":"SCTR Empleados-Pensión","Z210":"SCTR Empleados-Salud",
-  "Z211":"SCTR Obreros-Pensión","Z212":"SCTR Obreros-Salud",
-  "Z213":"SCTR Tripulantes-Pensión","Z214":"SCTR Tripulantes-Salud",
-  "Z215":"Gastos de Accionistas","Z216":"Seguro Vida Ley Grp Tripu",
-  "Z217":"Tto. Evac. Agua de Proc.","Z219":"Serv.Instalación Activos",
-  "Z221":"Servicio Alimentación Ter","Z222":"Serv. Inform. y Telecom.",
-  "Z223":"Servicios de Software","Z225":"Servicios Falso Flete Exp",
-  "Z226":"Serv. Gestión Medioamb.","Z227":"Serv Peritaje/Insp Equipo",
-  "Z228":"Gastos Útiles-Formularios","Z229":"Seguros por Viaje Emplead",
-  "Z230":"Seguros por Viaje Obr.Per","Z231":"Seguros PPTT Almacenes",
-  "Z232":"Estudio Crecim. Animales","Z233":"Serv. Transp. Almacen.",
-  "Z234":"Serv. Almacen. Harina","Z235":"Serv. Almacen. Aceite",
-  "Z236":"Gastos Premios y Reconoc.","Z237":"Bono Prefer. Descarga MP",
-  "Z238":"Capacitación Recob. Pers.","Z240":"Gtos.Reclam.Clien Extranj",
-  "Z241":"Capacitación al Personal","Z242":"Reclamo de Proveedores",
-  "Z243":"Alq. Arrendamiento","Z244":"Mtto. Arrendamiento",
-  "Z245":"Seg. Arrendamiento","Z246":"Serv. Arrendamiento",
-  "Z247":"Gtos Varios Arrendamiento","Z248":"Gastos por Siniestros",
-  "Z249":"Proveeduría tripulantes","Z250":"Proveeduría obreros",
-  "Z251":"Proveeduría empleados","Z252":"Asociaciación de pesca"
-};
+var CV_DESC = {};
+(RAW_CATS || []).forEach(function(c){ if(c.cv && c.cd) CV_DESC[c.cv]=c.cd; });
+(RAW_MAT || []).forEach(function(m){ if(m.cv && m.cd) CV_DESC[m.cv]=m.cd; });
 
 var MAT = RAW_MAT.map(function(r){
   return {
     mc:r.mc, md:r.md, tc:r.tc, td:r.td, gc:r.gc, gd:r.gd, cv:r.cv,
+    cd:r.cd||CV_DESC[r.cv]||'',
     gcc_raw:r.gcc,
     gcc:(r.gcc&&r.resp)?r.gcc+' \u2013 '+r.resp:(r.gcc||r.resp||''),
     txc:r.txc||''
@@ -271,7 +204,7 @@ function renderTable(){
       +'<td>'+m.gd+'</td>'
       +'<td><span class="tag t-gcc">'+m.gcc+'</span></td>'
       +'<td><span class="tag t-cat">'+m.cv+'</span></td>'
-      +'<td style="color:#555;font-size:12px">'+(CV_DESC[m.cv]||'')+'</td>'
+      +'<td style="color:#555;font-size:12px">'+(m.cd||'')+'</td>'
       +'</tr>';
   }).join('');
 }
@@ -281,7 +214,7 @@ function selectMat(mc){
   selMc=mc;
   var m=MAT.find(function(x){return x.mc===mc;});
   if(!m) return;
-  var cvDesc=CV_DESC[m.cv]||'';
+  var cvDesc=m.cd||'';
   document.getElementById('detail-panel').innerHTML=
     '<div class="mat-code-row">'
     +'<div class="mat-code">'+m.mc+'</div>'
@@ -354,7 +287,7 @@ function renderCats(){
   var tc=document.getElementById('f-cat-tipo').value;
   var rows=CATS.filter(function(c){
     if(tc&&c.tc!==tc) return false;
-    if(q&&!(c.tc+c.td+c.cv).toLowerCase().includes(q)) return false;
+    if(q&&!(c.tc+c.td+c.cv+(c.cd||'')).toLowerCase().includes(q)) return false;
     return true;
   });
   document.getElementById('cnt-cats').textContent=rows.length+' categor\u00edas';
@@ -362,7 +295,7 @@ function renderCats(){
     return '<tr><td><span class="badge" style="background:#dbeafe;color:#1e40af">'+c.tc+'</span></td>'
       +'<td style="color:#555">'+c.td+'</td>'
       +'<td><span class="badge" style="background:#d1fae5;color:#065f46;font-family:monospace">'+c.cv+'</span></td>'
-      +'<td style="color:#555">'+(CV_DESC[c.cv]||'')+'</td>'
+      +'<td style="color:#555">'+(c.cd||CV_DESC[c.cv]||'')+'</td>'
       +'<td style="text-align:center">'+(matByCat[c.cv]||0).toLocaleString()+' mat.</td></tr>';
   }).join('');
 }
@@ -399,8 +332,8 @@ function renderTb(){
 function exportCurrent(){
   var rows=[],headers=[],filename='';
   if(activeTab==='mat'){
-    headers=['C\u00f3digo','Descripci\u00f3n','Tipo','Desc. Tipo','Grupo Art\u00edculos','Desc. Grupo','Comprador','Cat. Valoraci\u00f3n'];
-    rows=filtered.map(function(m){return[m.mc,m.md,m.tc,m.td,m.gc,m.gd,m.gcc,m.cv];});
+    headers=['C\u00f3digo','Descripci\u00f3n','Tipo','Desc. Tipo','Grupo Art\u00edculos','Desc. Grupo','Comprador','Cat. Valoraci\u00f3n','Desc. Cat. Valoraci\u00f3n'];
+    rows=filtered.map(function(m){return[m.mc,m.md,m.tc,m.td,m.gc,m.gd,m.gcc,m.cv,m.cd||''];});
     filename='Servicios_Materiales';
   } else if(activeTab==='tipos'){
     headers=['C\u00f3digo Tipo','Descripci\u00f3n','N\u00ba Materiales'];
@@ -421,14 +354,14 @@ function exportCurrent(){
     }).map(function(g){return[g.tc,g.td,g.gc,g.gd,g.gcc];});
     filename='Servicios_GruposArticulos';
   } else if(activeTab==='cats'){
-    headers=['Tipo','Desc. Tipo','Cat. Valoraci\u00f3n','N\u00ba Materiales'];
+    headers=['Tipo','Desc. Tipo','Cat. Valoraci\u00f3n','Desc. Cat. Valoraci\u00f3n','N\u00ba Materiales'];
     var q4=document.getElementById('f-cat-q').value.toLowerCase();
     var tc4=document.getElementById('f-cat-tipo').value;
     rows=CATS.filter(function(c){
       if(tc4&&c.tc!==tc4) return false;
-      if(q4&&!(c.tc+c.td+c.cv).toLowerCase().includes(q4)) return false;
+      if(q4&&!(c.tc+c.td+c.cv+(c.cd||'')).toLowerCase().includes(q4)) return false;
       return true;
-    }).map(function(c){return[c.tc,c.td,c.cv,matByCat[c.cv]||0];});
+    }).map(function(c){return[c.tc,c.td,c.cv,c.cd||CV_DESC[c.cv]||'',matByCat[c.cv]||0];});
     filename='Servicios_CatValoracion';
   } else if(activeTab==='tb'){
     headers=['Tipo','Desc. Tipo','Grupo Art\u00edculos','Desc. Grupo','Cat. Valoraci\u00f3n'];

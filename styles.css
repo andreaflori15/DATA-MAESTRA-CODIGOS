@@ -22,8 +22,8 @@ header h1{font-size:15px;font-weight:700}
 .data-as-of{display:block;margin-top:2px;color:rgba(255,255,255,.55);font-weight:500}
 .app-footer{flex-shrink:0;padding:5px 18px;background:#fff;border-top:1px solid #dde1ea;font-size:11px;color:#888;text-align:center}
 .cat-hint{padding:4px 18px;font-size:11px;color:#888;background:#f7f8fc;border-bottom:1px solid #eaedf3;flex-shrink:0}
-.gcc-split{display:grid;grid-template-columns:280px 1fr;flex:1;min-height:0;overflow:hidden}
-.gcc-list-wrap{overflow-y:auto;border-right:1px solid #dde1ea;background:#fff}
+.gcc-split{display:grid;grid-template-columns:minmax(240px,280px) 1fr;flex:1 1 auto;min-height:0;height:100%;overflow:hidden}
+.gcc-list-wrap{overflow-y:auto;border-right:1px solid #dde1ea;background:#fff;min-height:0}
 .gcc-item{padding:10px 12px;cursor:pointer;border-bottom:1px solid #eaedf3;display:flex;align-items:center;gap:8px}
 .gcc-item:hover{background:#e8edf8}
 .gcc-item.sel{background:#d0daf5}

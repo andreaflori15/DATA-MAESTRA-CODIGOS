@@ -1,0 +1,13 @@
+# Script con conexión a SQL Server (solo en PC local)
+generar_data_json.py
+
+# Fuente del script; el sitio usa data.js ya generado
+txc_manual.json
+
+# Notas internas con infraestructura Austral
+CONTEXTO.md
+
+# Respaldos y archivos de Windows
+data.js.bak
+desktop.ini
+Thumbs.db

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Data Maestra – Servicios Austral</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<script src="data.js"></script>
+<div id="home">
+  <div class="home-title">
+    <h2>🐟 Data Maestra Austral</h2>
+    <p>Catálogo de códigos de servicio</p>
+  </div>
+  <div>
+    <div class="home-card" onclick="openModule()">
+      <div class="icon">🔧</div>
+      <h3>Servicios</h3>
+      <p>Códigos de servicio por tipo, grupo y categoría de valoración</p>
+      <span class="cnt" id="home-cnt"></span>
+    </div>
+  </div>
+  <div class="home-footer">Austral Perú &middot; Data Maestra SAP S/4HANA<br><span class="app-version">v1.2 – 31/07/2026</span></div>
+</div>
+<div id="app">
+  <header>
+    <button class="hdr-back" onclick="goHome()">← Inicio</button>
+    <h1>🔧 Servicios</h1>
+    <span class="hdr-badge">SERVICIOS</span>
+    <span class="hdr-stats" id="hdr-stats"></span>
+    <button class="btn-export" onclick="exportCurrent()">⬇ Exportar Excel</button>
+  </header>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('mat')">🗂 Materiales</div>
+    <div class="tab" onclick="switchTab('tipos')">🏷 Tipos</div>
+    <div class="tab" onclick="switchTab('grupos')">📂 Grupos artículos</div>
+    <div class="tab" onclick="switchTab('cats')">💰 Cat. valoración</div>
+    <div class="tab" onclick="switchTab('tb')" style="display:none">🔗 Tabla maestra</div>
+  </div>
+  <div class="view active" id="view-mat">
+    <div class="filters">
+      <div class="fg"><label>Buscar</label><input id="s-desc" placeholder="Código o descripción..." oninput="applyFilters()"></div>
+      <div class="sd-wrap"><label>Tipo</label>
+        <div class="sd-input-wrap">
+          <input class="sd-input" id="sd-tipo-input" placeholder="Todos los tipos" readonly onclick="toggleSD('tipo')" autocomplete="off">
+          <span class="sd-arrow">▼</span>
+        </div>
+        <div class="sd-dropdown" id="sd-tipo-drop">
+          <input class="sd-search" id="sd-tipo-search" placeholder="Buscar tipo..." oninput="filterSD('tipo')">
+          <div class="sd-list" id="sd-tipo-list"></div>
+        </div>
+      </div>
+      <div class="sd-wrap"><label>Grupo artículos</label>
+        <div class="sd-input-wrap">
+          <input class="sd-input" id="sd-grupo-input" placeholder="Todos los grupos" readonly onclick="toggleSD('grupo')" autocomplete="off">
+          <span class="sd-arrow">▼</span>
+        </div>
+        <div class="sd-dropdown" id="sd-grupo-drop">
+          <input class="sd-search" id="sd-grupo-search" placeholder="Buscar grupo..." oninput="filterSD('grupo')">
+          <div class="sd-list" id="sd-grupo-list"></div>
+        </div>
+      </div>
+      <div class="sd-wrap"><label>Comprador</label>
+        <div class="sd-input-wrap">
+          <input class="sd-input" id="sd-gcc-input" placeholder="Todos" readonly onclick="toggleSD('gcc')" autocomplete="off">
+          <span class="sd-arrow">▼</span>
+        </div>
+        <div class="sd-dropdown" id="sd-gcc-drop">
+          <input class="sd-search" id="sd-gcc-search" placeholder="Buscar comprador..." oninput="filterSD('gcc')">
+          <div class="sd-list" id="sd-gcc-list"></div>
+        </div>
+      </div>
+      <div class="sd-wrap"><label>Cat. valoración</label>
+        <div class="sd-input-wrap">
+          <input class="sd-input" id="sd-cv-input" placeholder="Todas las cat." readonly onclick="toggleSD('cv')" autocomplete="off">
+          <span class="sd-arrow">▼</span>
+        </div>
+        <div class="sd-dropdown" id="sd-cv-drop">
+          <input class="sd-search" id="sd-cv-search" placeholder="Buscar categoría..." oninput="filterSD('cv')">
+          <div class="sd-list" id="sd-cv-list"></div>
+        </div>
+      </div>
+      <div class="fg"><label>Texto R3</label>
+        <div class="chip-row" id="txc-filter">
+          <button type="button" class="chip active" data-txc="" onclick="setTxcFilter(this)">Todos</button>
+          <button type="button" class="chip" data-txc="con" onclick="setTxcFilter(this)">Con texto R3</button>
+          <button type="button" class="chip" data-txc="sin" onclick="setTxcFilter(this)">Sin texto R3</button>
+        </div>
+      </div>
+      <button class="btn btn-sec" onclick="clearFilters()">Limpiar</button>
+      <div class="export-wrap"><span class="export-note" id="export-note"></span></div>
+    </div>
+    <div class="statsbar">
+      <span>Mostrando <b id="stat-range">0</b> de <b id="stat-total">0</b> materiales</span>
+      <span>Página <b id="stat-page">1</b> de <b id="stat-pages">1</b></span>
+    </div>
+    <div class="main">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th onclick="sortBy(0)">Código ↕</th>
+            <th onclick="sortBy(1)">Descripción ↕</th>
+            <th onclick="sortBy(2)">Tipo ↕</th>
+            <th onclick="sortBy(3)">Desc. Tipo ↕</th>
+            <th onclick="sortBy(4)">Grupo ↕</th>
+            <th onclick="sortBy(5)">Desc. Grupo ↕</th>
+            <th onclick="sortBy(6)">Comprador ↕</th>
+            <th onclick="sortBy(7)">Cat. Val. ↕</th><th>Desc. Cat. Val.</th>
+          </tr></thead>
+          <tbody id="mat-body"></tbody>
+        </table>
+      </div>
+      <div class="detail" id="detail-panel"><div class="detail-ph">← Selecciona un material para ver el detalle</div></div>
+    </div>
+    <div class="pager">
+      <button id="btn-prev" onclick="prevPage()">← Anterior</button>
+      <button id="btn-next" onclick="nextPage()">Siguiente →</button>
+      <span style="margin-left:auto;font-size:11px;color:#888">50 por página</span>
+    </div>
+  </div>
+  <div class="view" id="view-tipos">
+    <div class="cat-filters">
+      <input id="f-tipos-q" placeholder="Buscar tipo..." oninput="renderTipos()">
+      <span class="cnt" id="cnt-tipos"></span>
+    </div>
+    <div class="cat-wrap"><table class="cat-table">
+      <thead><tr><th>Código Tipo</th><th>Descripción</th><th>Nº Materiales</th></tr></thead>
+      <tbody id="tb-tipos"></tbody>
+    </table></div>
+  </div>
+  <div class="view" id="view-grupos">
+    <div class="cat-filters">
+      <input id="f-grp-q" placeholder="Buscar grupo..." oninput="renderGrupos()">
+      <select id="f-grp-tipo" onchange="renderGrupos()"><option value="">Todos los tipos</option></select>
+      <select id="f-grp-gcc" onchange="renderGrupos()"><option value="">Todos los compradores</option></select>
+      <span class="cnt" id="cnt-grupos"></span>
+    </div>
+    <div class="cat-wrap"><table class="cat-table">
+      <thead><tr><th>Tipo</th><th>Desc. Tipo</th><th>Grupo Artículos</th><th>Desc. Grupo</th><th>Comprador</th><th>Nº Materiales</th></tr></thead>
+      <tbody id="tb-grupos"></tbody>
+    </table></div>
+  </div>
+  <div class="view" id="view-cats">
+    <div class="cat-filters">
+      <input id="f-cat-q" placeholder="Buscar categoría..." oninput="renderCats()">
+      <select id="f-cat-tipo" onchange="renderCats()"><option value="">Todos los tipos</option></select>
+      <span class="cnt" id="cnt-cats"></span>
+    </div>
+    <div class="cat-wrap"><table class="cat-table">
+      <thead><tr><th>Tipo</th><th>Desc. Tipo</th><th>Cat. Valoración</th><th>Descripción</th><th>Nº Materiales</th></tr></thead>
+      <tbody id="tb-cats"></tbody>
+    </table></div>
+  </div>
+  <div class="view" id="view-tb">
+    <div class="cat-filters">
+      <input id="f-tb-q" placeholder="Buscar..." oninput="renderTb()">
+      <select id="f-tb-tipo" onchange="onTbTipoChange()"><option value="">Todos los tipos</option></select>
+      <select id="f-tb-grupo" onchange="renderTb()"><option value="">Todos los grupos</option></select>
+      <select id="f-tb-cat" onchange="renderTb()"><option value="">Todas las cat.</option></select>
+      <span class="cnt" id="cnt-tb"></span>
+      <div class="export-wrap"><button class="btn-export" onclick="exportCurrent()">⬇ Exportar</button></div>
+    </div>
+    <div class="cat-wrap"><table class="cat-table">
+      <thead><tr><th>Tipo</th><th>Desc. Tipo</th><th>Grupo Artículos</th><th>Desc. Grupo</th><th>Cat. Valoración</th></tr></thead>
+      <tbody id="tb-tb"></tbody>
+    </table></div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
